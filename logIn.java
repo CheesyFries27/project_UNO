@@ -104,18 +104,21 @@ public class logIn {
 		frame.getContentPane().add(verify);
 		verify.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
-		        if (user.getText().equals("admin") && pwd.getText().equals("admin")) {
+		        String enteredUsername = user.getText();
+		        String enteredPassword = pwd.getText();
+		        
+		        // Check name and password
+		        boolean isValid = DatabaseConnection.validateUser(enteredUsername, enteredPassword);
+		        
+		        if (isValid) {
 		            System.out.println("Access Granted");
 		            
-		            // Close the login window
 		            frame.dispose();
 		            
-		            // Open the To-Do List window
 		            EventQueue.invokeLater(new Runnable() {
 		                public void run() {
 		                    try {
 		                        toDoList window = new toDoList();
-		                        
 		                    } catch (Exception ex) {
 		                        ex.printStackTrace();
 		                    }
@@ -124,6 +127,8 @@ public class logIn {
 		            
 		        } else {
 		            System.out.println("Access Denied");
+		            // Optional: Show a popup error message to the user using JOptionPane
+		            javax.swing.JOptionPane.showMessageDialog(frame, "Invalid username or password", "Access Denied", javax.swing.JOptionPane.ERROR_MESSAGE);
 		        }
 		    }
 		});
