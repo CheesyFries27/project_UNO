@@ -47,6 +47,14 @@ public class DatabaseConnection {
                 completed INTEGER NOT NULL DEFAULT 0
             )
             """;
+
+		String createUsersTable = """
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL
+            )
+            """;
 //Made a quick change as for the table to made of strings to compare in the log in screen! Alex
 
         String sql = """
@@ -60,6 +68,9 @@ public class DatabaseConnection {
 
         try (Connection conn = connect();
              Statement stmt = conn.createStatement()) {
+
+			stmt.executeUpdate(createTasksTable);
+            stmt.executeUpdate(createUsersTable);
 
             stmt.executeUpdate(sql);
             System.out.println("Database connected successfully!");
