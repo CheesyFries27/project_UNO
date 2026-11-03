@@ -102,6 +102,11 @@ public class logIn {
 		verify.setFont(new Font("Tahoma", Font.BOLD, 10));
 		verify.setBounds(99, 236, 96, 20);
 		frame.getContentPane().add(verify);
+		
+		JButton btnNewButton = new JButton("New User");
+		btnNewButton.setToolTipText("New User");
+		btnNewButton.setBounds(99, 371, 96, 20);
+		frame.getContentPane().add(btnNewButton);
 		verify.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
 		        String enteredUsername = user.getText();
