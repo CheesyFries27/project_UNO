@@ -72,10 +72,19 @@ public class toDoList extends JFrame {
         taskList.setCellRenderer((list, task, index, isSelected, cellHasFocus) -> {
             javax.swing.DefaultListCellRenderer renderer =
                 new javax.swing.DefaultListCellRenderer();
+            String[] priorities = {"None", "Low", "Medium", "High"};
+            int priorityIndex = task.getPriority();
+            String text = task.toString()
+                    + " | Assigned to #" + task.getAssignedTo()
+                    + " | " + priorities[priorityIndex]
+                    + (task.getDueDate() == null
+                            ? ""
+                            : " | Due " + task.getDueDate()
+                    );
 
             return renderer.getListCellRendererComponent(
                 list,
-                task.getTitle(),
+                text,
                 index,
                 isSelected,
                 cellHasFocus
@@ -108,50 +117,59 @@ public class toDoList extends JFrame {
         contentPane.add(btnDeleteTask);
 
         // Button listeners
-        btnAddTask.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        btnAddTask.addActionListener(e -> {
+            Tasks created = TaskCreationDialog.showDialog(
+                this,
+                currentUserId,
+                taskInputField.getText()
+            );
 
-                String newTask = taskInputField.getText().trim();
-
-                if (!newTask.isEmpty()) {
-
-                    int taskId = DatabaseConnection.addTask(
-                        newTask, currentUserId
-                    );
-
-                    if (taskId != -1) {
-
-                        Tasks task = new Tasks(
-                            newTask, "", 0, null,
-                            currentUserId, currentUserId
-                        );
-
-                        task.setId(taskId);
-
-                        taskListModel.addElement(task);
-                        taskInputField.setText("");
-
-                        System.out.println("Task ID: " + taskId);
-
-                    } else {
-                        JOptionPane.showMessageDialog(
-                            contentPane, "Failed to save task."
-                        );
-                    }
-                }
+            if (created != null) {
+                taskListModel.add(0, created);
+                taskInputField.setText("");
             }
         });
 
-        btnDeleteTask.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Tasks selectedTask = taskList.getSelectedValue();
-                if (selectedTask != null) {
-                    taskListModel.removeElement(selectedTask);
-                    DatabaseConnection.deleteTask(selectedTask.getId(), currentUserId);
-                }
+        taskInputField.addActionListener(e ->
+            btnAddTask.doClick()
+        );
+
+        btnDeleteTask.addActionListener(e -> {
+            Tasks selectedTask = taskList.getSelectedValue();
+
+            if (selectedTask == null) {
+                return;
+            }
+
+            boolean deleted = DatabaseConnection.deleteTask(
+                selectedTask.getId(),
+                currentUserId
+            );
+
+            if (deleted) {
+                taskListModel.removeElement(selectedTask);
+            } else {
+                JOptionPane.showMessageDialog(
+                    contentPane,
+                    "Could not delete task. " +
+                    "Only its creator can delete it."
+                );
             }
         });
+
+        try {
+            for (Tasks task :
+                    DatabaseConnection.getTasks(currentUserId)) {
+                taskListModel.addElement(task);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Could not load saved tasks: " + ex.getMessage(),
+                "Load error",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
 
         setVisible(true);
     }

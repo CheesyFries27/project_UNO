@@ -141,6 +141,70 @@ public class DatabaseConnection {
         }
         return -1;
     }
+    public static java.util.Map<Integer, String> getUsers()
+            throws SQLException {
+
+        java.util.Map<Integer, String> users =
+            new java.util.LinkedHashMap<>();
+
+        String sql =
+            "SELECT id, username FROM users ORDER BY username COLLATE NOCASE";
+
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                users.put(rs.getInt("id"), rs.getString("username"));
+            }
+        }
+
+        return users;
+    }
+    // grab tasks based on userid and assigned id then return in a list
+    public static java.util.List<Tasks> getTasks(int userId)
+            throws SQLException {
+
+        java.util.List<Tasks> tasks = new java.util.ArrayList<>();
+
+        String sql =
+            "SELECT * FROM tasks " +
+            "WHERE user_id = ? OR assigned_to = ? ORDER BY id DESC";
+
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String date = rs.getString("due_date");
+
+                    LocalDate dueDate =
+                        date == null || date.isBlank()
+                            ? null
+                            : LocalDate.parse(date);
+
+                    Tasks task = new Tasks(
+                        rs.getString("title"),
+                        rs.getString("description"),
+                        rs.getInt("priority"),
+                        dueDate,
+                        rs.getInt("createdBy"),
+                        rs.getInt("assigned_to")
+                    );
+
+                    task.setId(rs.getInt("id"));
+                    task.setCompleted(rs.getBoolean("completed"));
+
+                    tasks.add(task);
+                }
+            }
+        }
+
+        return tasks;
+    }
 
     public static void main(String[] args) {
     	try (Connection conn = connect();
